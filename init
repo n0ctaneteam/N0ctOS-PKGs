@@ -7,6 +7,17 @@
 
 doc_url=https://n0ctaneteam.github.io/N0ctOS
 
+# Array of script names
+SCRIPTS=(
+    "auto-all"
+    "build-all"
+    "move-all"
+    "push-to-repo"
+)
+
+git lfs install
+git lfs track "*.pkg.tar.zst"
+
 mkdir ~/Projects/N0ctOS
 cd ~/Projects/N0ctOS
 
@@ -17,15 +28,11 @@ echo "1 (latest) ; 2 (full)    [default:1]"
 read git_clone_type
 
 case $git_clone_type in
-	"1")
-		git_clone_type="latest"
-		;;
 	"2")
 		git_clone_type="full"
 		;;
 	*)
-		echo "couldn't understand"
-		exit
+		git_clone_type="latest"
 		;;
 esac
 
@@ -35,7 +42,11 @@ git clone https://github.com/n0ctaneteam/N0ctOS-PKGBUILDs.git
 git clone https://github.com/n0ctaneteam/N0ctOS-pkg-repo.git
 
 
-clear
+# Loop through scripts
+for FILE in "${SCRIPTS[@]}"; do
+    chmod +x ~/Projects/N0ctOS/N0ctOS-PKGBUILDs/"$FILE"
+    echo "chmod-ed $FILE"
+done
 echo "########################################"
 echo "!!!        Dev Env setup done        !!!"
 echo "########################################"

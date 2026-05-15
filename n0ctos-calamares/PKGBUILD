@@ -1,0 +1,114 @@
+# Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
+
+pkgname=n0ctos-calamares
+pkgver=3.4.2
+pkgrel=1
+pkgdesc='GUI installer For N0ctOS Linux Distro'
+arch=('x86_64')
+license=(GPL-3.0-or-later)
+url="https://github.com/n0ctaneteam/N0ctOS-calamares"
+conflicts=('calamares')
+provides=('calamares')
+depends=(
+  'kcoreaddons'
+  'kpmcore'
+  'libpwquality'
+  'qt6-declarative'
+  'qt6-svg'
+  'yaml-cpp'
+)
+makedepends=(
+  'boost'
+  'cmake'
+  'extra-cmake-modules'
+  'libglvnd'
+  'ninja'
+  'qt6-tools'
+  'qt6-translations'
+)
+sha256sums=('SKIP')
+# Bootloader
+source=(calamares::"git+${url}.git#branch=main")
+options=('!emptydirs')
+
+prepare() {
+    cd ${srcdir}/calamares
+    # change version
+    _ver="$(cat CMakeLists.txt | grep -m3 -e "  VERSION" | grep -o "[[:digit:]]*" | xargs | sed s'/ /./g')"
+    _ver="$pkgver"
+    printf 'Version: %s-%s\n' "${_ver}" "${pkgrel}"
+    sed -i -e "s|\${CALAMARES_VERSION_MAJOR}.\${CALAMARES_VERSION_MINOR}.\${CALAMARES_VERSION_PATCH}|${_ver}-${pkgrel}|g" CMakeLists.txt
+    sed -i -e "s|CALAMARES_VERSION_RC 1|CALAMARES_VERSION_RC 0|g" CMakeLists.txt
+}
+
+build() {
+    cd ${srcdir}/calamares
+
+    export CXXFLAGS+=" -fPIC"
+
+    local _skip_modules=(
+      dracut
+      dracutlukscfg
+      dummycpp
+      dummyprocess
+      dummypython
+      dummypythonqt
+      initramfs
+      initramfscfg
+      interactiveterminal
+      packagechooser
+      packagechooserq
+      services-openrc
+    )
+  
+    # Correct source directory (inside src/)
+    local _pkgsrc_dir="$srcdir/calamares"
+  
+    local _cmake_options=(
+      -B build
+      -S "$_pkgsrc_dir"
+      -G Ninja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_INSTALL_PREFIX='/usr'
+      -DCMAKE_INSTALL_LIBDIR='lib'
+      -DWITH_QT6=ON
+      -DINSTALL_CONFIG=ON
+      -DSKIP_MODULES="${_skip_modules[*]}"
+      -DBUILD_TESTING=OFF
+  
+      # Explicit KDE install dirs to suppress warnings
+      -DKDE_INSTALL_BINDIR=/usr/bin
+      -DKDE_INSTALL_SBINDIR=/usr/sbin
+      -DKDE_INSTALL_LIBDIR=/usr/lib
+      -DKDE_INSTALL_LIBEXECDIR=/usr/libexec
+      -DKDE_INSTALL_INCLUDEDIR=/usr/include
+      -DKDE_INSTALL_LOCALSTATEDIR=/var
+      -DKDE_INSTALL_SHAREDSTATEDIR=/usr/share
+      -DKDE_INSTALL_DATAROOTDIR=/usr/share
+      -DKDE_INSTALL_DATADIR=/usr/share
+      -DKDE_INSTALL_LOCALEDIR=/usr/share/locale
+      -DKDE_INSTALL_MANDIR=/usr/share/man
+      -DKDE_INSTALL_INFODIR=/usr/share/info
+      -DKDE_INSTALL_SYSCONFDIR=/etc
+  
+      -Wno-dev
+    )
+  
+    cmake "${_cmake_options[@]}"
+    cmake --build build
+}
+
+package() {
+    cd ${srcdir}/calamares/build
+    DESTDIR="${pkgdir}" cmake --build . --target install
+
+    cp ${srcdir}/calamares/settings.conf "$pkgdir/usr/share/calamares/settings.conf"
+    local _destdir=etc/calamares
+    install -dm755 $pkgdir/$_destdir
+    install -dm755 $pkgdir/$_destdir/modules
+    cp -rf ${srcdir}/calamares/src/modules/*/*.conf "$pkgdir/etc/calamares/modules"
+    cp -rf ${srcdir}/calamares/src/branding "$pkgdir/etc/calamares/branding"
+
+    # Workaround netinstall.yaml not being installed by cmake
+    cp ${srcdir}/calamares/src/modules/netinstall/netinstall.yaml "$pkgdir/etc/calamares/modules/netinstall.yaml"
+}

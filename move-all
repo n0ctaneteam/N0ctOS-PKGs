@@ -1,0 +1,50 @@
+#!/bin/env bash
+
+# Prefix to match
+PREFIX="n0ctos-"
+
+# Directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+mapfile -t MATCHING_DIRS < <(
+    find "$SCRIPT_DIR" \
+        -mindepth 1 \
+        -maxdepth 1 \
+        -type d \
+        -name "${PREFIX}*" \
+        | sort
+)
+
+if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
+    echo "No matching folders found."
+    exit 0
+fi
+
+echo "Found ${#MATCHING_DIRS[@]} matching folder(s):"
+printf ' - %s\n' "${MATCHING_DIRS[@]}"
+echo
+
+mkdir "__export__"
+rm -rf ./__export__/*
+
+for DIR in "${MATCHING_DIRS[@]}"; do
+    BASENAME="$(basename "$DIR")"
+
+    echo "Processing: $BASENAME"
+
+    if compgen -G "$DIR/*.pkg.tar.zst" > /dev/null; then
+        echo "  PKG found"
+
+        cp "$DIR"/*.pkg.tar.zst "$SCRIPT_DIR/__export__/"
+
+        notify-send \
+            -a 'N0ctOS PKG mover' \
+            -t 5000 \
+            'N0ctOS PKG mover' \
+            "Done Moving $BASENAME"
+    else
+        echo "  PKG not found"
+    fi
+done
+
+echo "Done."

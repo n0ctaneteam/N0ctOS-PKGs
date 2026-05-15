@@ -1,0 +1,27 @@
+# Ignore everything by default
+*
+
+# =========================
+# ROOT FILES
+# =========================
+
+# Allow all root-level files
+!/*
+
+# But ignore the export directory
+/__export__/
+/__export__/**
+
+# Ignore all root directories
+*/*
+
+# =========================
+# SUBFOLDER ALLOWED FILES
+# =========================
+
+# Allow directories themselves
+!*/
+
+# Allow only these files inside subfolders
+!*/PKGBUILD
+!*/.SRCINFO

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+# =========================
+# Config
+# =========================
+
+# Prefix to match
+PREFIX="n0ctos-"
+
+# Directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# =========================
+# Find matching folders
+# =========================
+
+echo "Searching in: $SCRIPT_DIR"
+echo "Looking for folders starting with: $PREFIX"
+echo
+
+# Depth 1 only:
+#   - mindepth 1 => ignore current folder
+#   - maxdepth 1 => only direct children
+#   - type d      => directories only
+mapfile -t MATCHING_DIRS < <(
+    find "$SCRIPT_DIR" \
+        -mindepth 1 \
+        -maxdepth 1 \
+        -type d \
+        -name "${PREFIX}*" \
+        | sort
+)
+
+# =========================
+# Check results
+# =========================
+
+if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
+    echo "No matching folders found."
+    exit 0
+fi
+
+echo "Found ${#MATCHING_DIRS[@]} matching folder(s):"
+printf ' - %s\n' "${MATCHING_DIRS[@]}"
+echo
+
+# =========================
+# Loop through folders
+# =========================
+
+for DIR in "${MATCHING_DIRS[@]}"; do
+    BASENAME="$(basename "$DIR")"
+
+    echo "Processing: $BASENAME"
+
+    # =========================
+    # Your logic here
+    # =========================
+
+    # Example logic:
+    if [ -f "$DIR/PKGBUILD" ]; then
+        echo "  PKGBUILD found"
+        notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 'N0ctOS PKGBUILD compiler' "Started compiling $BASENAME"
+        # Run script
+        (
+            cd "$DIR" || exit 1
+            makepkg -sCcf --sign
+        )
+        notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 'N0ctOS PKGBUILD compiler' "Done compiling $BASENAME"
+    else
+        echo "  PKGBUILD not found"
+    fi
+done
+
+echo "Done."
