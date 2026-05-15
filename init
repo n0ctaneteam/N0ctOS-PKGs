@@ -34,26 +34,6 @@ echo -e "\n\n\ncloning the $git_clone_type git(s)"
 git clone https://github.com/n0ctaneteam/N0ctOS-PKGBUILDs.git
 git clone https://github.com/n0ctaneteam/N0ctOS-pkg-repo.git
 
-clear
-echo "##########################################"
-echo "!!!           Git clone done           !!!"
-echo "##########################################"
-
-echo -e "\n\n\n"
-echo "############################################################"
-echo "###   Do u want to remove this file ? (cz ts is useless)  ###"
-echo "############################################################"
-echo "1 (yes) ; 2 (no)    [default:1]"
-read what_to_do_with_this_file
-
-case $what_to_do_with_this_file in
-	"1")
-	  rm init 
-		;;
-	"*")
-	  exit
-		;;
-esac
 
 clear
 echo "########################################"
