@@ -15,8 +15,6 @@ SCRIPTS=(
     "push-to-repo"
 )
 
-git lfs install
-git lfs track "*.pkg.tar.zst"
 
 mkdir ~/Projects/N0ctOS
 cd ~/Projects/N0ctOS
@@ -41,6 +39,13 @@ echo -e "\n\n\ncloning the $git_clone_type git(s)"
 git clone https://github.com/n0ctaneteam/N0ctOS-PKGBUILDs.git
 git clone https://github.com/n0ctaneteam/N0ctOS-pkg-repo.git
 
+cd ~/Projects/N0ctOS/N0ctOS-PKGBUILDs
+git lfs install
+git lfs track "*.pkg.tar.zst"
+
+cd ~/Projects/N0ctOS/N0ctOS-pkg-repo
+git lfs install
+git lfs track "*.pkg.tar.zst"
 
 # Loop through scripts
 for FILE in "${SCRIPTS[@]}"; do
