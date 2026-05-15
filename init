@@ -48,7 +48,7 @@ read what_to_do_with_this_file
 
 case $what_to_do_with_this_file in
 	"1")
-	  rm ./init 
+	  rm init 
 		;;
 	"*")
 	  exit
