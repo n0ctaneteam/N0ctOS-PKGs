@@ -40,8 +40,7 @@ mv -f N0ctOS-pkg-repo.files.tar.zst N0ctOS-pkg-repo.files
 GIT_USER="$(git config user.name)"
 CURRENT_TIME="$(date '+%Y-%m-%d %H:%M:%S')"
 
-git fetch
-git checkout -b update
+git checkout update
 git add .
 git commit -m "Update by $GIT_USER at $CURRENT_TIME"
 git push origin update
