@@ -1,6 +1,7 @@
 #!/bin/env bash
 
-set -e
+set -euo pipefail
+
 clear
 ./build-all
 ./move-all

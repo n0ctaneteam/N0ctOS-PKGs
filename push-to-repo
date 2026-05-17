@@ -18,6 +18,12 @@ git push
 # 
 # 
 mkdir ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64
+if [ -z "$(ls -A ./__export__/)" ]; then
+    echo "ERR: __export__ is empty, nothing to copy"
+    exit 1
+fi
+
+rm -rf ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64/*
 cp -r ./__export__/* ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64/
 
 cd ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64
