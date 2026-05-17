@@ -1,6 +1,22 @@
 #!/bin/env bash
+# 
+# 
+# PUSH THE PKGBUILD REPO
+# 
+cd ~/Projects/N0ctOS/N0ctOS-PKGBUILDs
 
+USER=$(git config user.name)
+DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
+git add .
+git commit -m "pushed on $DATE by $USER"
+git push
+
+# 
+# 
+# PUSH THE PKG-REPO
+# 
+# 
 mkdir ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64
 cp -r ./__export__/* ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64/
 

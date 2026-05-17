@@ -35,7 +35,8 @@ for DIR in "${MATCHING_DIRS[@]}"; do
     if compgen -G "$DIR/*.pkg.tar.zst" > /dev/null; then
         echo "  PKG found"
 
-        cp "$DIR"/*.pkg.tar.zst "$SCRIPT_DIR/__export__/"
+        mv "$DIR"/*.pkg.tar.zst "$SCRIPT_DIR/__export__/"
+        mv "$DIR"/*.pkg.tar.zst.sig "$SCRIPT_DIR/__export__/"
 
         notify-send \
             -a 'N0ctOS PKG mover' \

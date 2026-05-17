@@ -13,7 +13,7 @@
 /__export__/**
 
 # Ignore all root directories
-*/*
+*/**
 
 # =========================
 # SUBFOLDER ALLOWED FILES
@@ -25,3 +25,4 @@
 # Allow only these files inside subfolders
 !*/PKGBUILD
 !*/.SRCINFO
+!*/*.cfg/**

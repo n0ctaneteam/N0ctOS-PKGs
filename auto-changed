@@ -1,0 +1,7 @@
+#!/bin/env bash
+
+set -e
+clear
+./build-changed
+./move-all
+./push-to-repo

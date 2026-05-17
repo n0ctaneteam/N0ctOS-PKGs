@@ -1,27 +1,17 @@
 #!/usr/bin/env bash
-
 # =========================
 # Config
 # =========================
-
-# Prefix to match
 PREFIX="n0ctos-"
-
-# Directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # =========================
-# Find matching folders
+# Find matching local folders
 # =========================
-
 echo "Searching in: $SCRIPT_DIR"
 echo "Looking for folders starting with: $PREFIX"
 echo
 
-# Depth 1 only:
-#   - mindepth 1 => ignore current folder
-#   - maxdepth 1 => only direct children
-#   - type d      => directories only
 mapfile -t MATCHING_DIRS < <(
     find "$SCRIPT_DIR" \
         -mindepth 1 \
@@ -31,45 +21,93 @@ mapfile -t MATCHING_DIRS < <(
         | sort
 )
 
-# =========================
-# Check results
-# =========================
-
 if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
     echo "No matching folders found."
+    notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
+        -i dialog-warning \
+        'N0ctOS PKGBUILD compiler' "No matching folders found."
     exit 0
 fi
 
-echo "Found ${#MATCHING_DIRS[@]} matching folder(s):"
+TOTAL=${#MATCHING_DIRS[@]}
+echo "Found $TOTAL matching folder(s):"
 printf ' - %s\n' "${MATCHING_DIRS[@]}"
 echo
+
+notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
+    -i system-run \
+    'N0ctOS PKGBUILD compiler' "Starting build of $TOTAL package(s)…"
 
 # =========================
 # Loop through folders
 # =========================
+BUILT=0
+SKIPPED=0
+FAILED=0
+COUNT=0
 
 for DIR in "${MATCHING_DIRS[@]}"; do
     BASENAME="$(basename "$DIR")"
+    (( COUNT++ ))
 
-    echo "Processing: $BASENAME"
+    echo "──────────────────────────────────────"
+    echo "[$COUNT/$TOTAL] Processing: $BASENAME"
 
-    # =========================
-    # Your logic here
-    # =========================
+    if [ ! -f "$DIR/PKGBUILD" ]; then
+        echo "  [SKIP] No local PKGBUILD — skipping."
+        notify-send -a 'N0ctOS PKGBUILD compiler' -t 4000 \
+            -i dialog-warning \
+            "[$COUNT/$TOTAL] Skipped: $BASENAME" "No local PKGBUILD found."
+        (( SKIPPED++ ))
+        continue
+    fi
 
-    # Example logic:
-    if [ -f "$DIR/PKGBUILD" ]; then
-        echo "  PKGBUILD found"
-        notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 'N0ctOS PKGBUILD compiler' "Started compiling $BASENAME"
-        # Run script
-        (
-            cd "$DIR" || exit 1
-            makepkg -sCcf --sign
-        )
-        notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 'N0ctOS PKGBUILD compiler' "Done compiling $BASENAME"
+    echo "  [BUILD] Starting makepkg…"
+    notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
+        -i system-run \
+        "[$COUNT/$TOTAL] Building: $BASENAME" "Started compiling…"
+
+    (
+        cd "$DIR" || exit 1
+        makepkg -sCcf --sign
+    )
+    BUILD_EXIT=$?
+
+    if [ $BUILD_EXIT -eq 0 ]; then
+        echo "  [OK] Build succeeded: $BASENAME"
+        notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
+            -i dialog-ok-apply \
+            "[$COUNT/$TOTAL] Done: $BASENAME" "Build completed successfully."
+        (( BUILT++ ))
     else
-        echo "  PKGBUILD not found"
+        echo "  [ERROR] Build failed for $BASENAME (exit $BUILD_EXIT)"
+        notify-send -a 'N0ctOS PKGBUILD compiler' -t 10000 \
+            -i dialog-error \
+            "[$COUNT/$TOTAL] FAILED: $BASENAME" "makepkg exited with code $BUILD_EXIT."
+        (( FAILED++ ))
     fi
 done
 
+# =========================
+# Summary
+# =========================
+echo
+echo "══════════════════════════════════════"
+echo "  Total:   $TOTAL"
+echo "  Built:   $BUILT"
+echo "  Skipped: $SKIPPED (no PKGBUILD)"
+echo "  Failed:  $FAILED"
+echo "══════════════════════════════════════"
 echo "Done."
+
+if [ $FAILED -eq 0 ]; then
+    notify-send -a 'N0ctOS PKGBUILD compiler' -t 8000 \
+        -i system-run \
+        'N0ctOS PKGBUILD compiler — Done' \
+        "✔ $BUILT built  |  $SKIPPED skipped  |  $FAILED failed"
+else
+    notify-send -a 'N0ctOS PKGBUILD compiler' -t 10000 \
+        -i system-run \
+        'N0ctOS PKGBUILD compiler — Done (with errors)' \
+        "✔ $BUILT built  |  $SKIPPED skipped  |  ✘ $FAILED failed"
+fi
