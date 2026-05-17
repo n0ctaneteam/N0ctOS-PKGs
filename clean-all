@@ -1,0 +1,62 @@
+#!/bin/env bash
+
+#!/bin/bash
+
+# ================================
+# KEEP RULES
+# add filenames, extensions, or patterns
+# ================================
+KEEP=(
+    "PKGBUILD"
+    ".SRCINFO"
+    "*.cfg"
+    "*.cfg/**"
+)
+
+# ================================
+# SCRIPT
+# ================================
+
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+
+should_keep() {
+    local item="$1"
+    local name="$(basename "$item")"
+
+    for rule in "${KEEP[@]}"; do
+        # match by exact name or glob against basename
+        [[ "$name" == $rule ]] && return 0
+        # match by full path pattern (for rules like *.cfg/**)
+        [[ "$item" == $rule ]] && return 0
+        # match if item lives inside a kept directory pattern
+        [[ "$item" == */$rule ]] && return 0
+        [[ "$item" == */$rule/* ]] && return 0
+    done
+
+    return 1
+}
+
+echo "== N0ctOS Clean-All =="
+echo "Root: $REPO_ROOT"
+echo ""
+
+for subdir in "$REPO_ROOT"/*/; do
+    [ -d "$subdir" ] || continue
+    echo ">> Cleaning: $(basename "$subdir")"
+
+    for item in "$subdir"* "$subdir".*; do
+        [[ "$(basename "$item")" == "." || "$(basename "$item")" == ".." ]] && continue
+        [ -e "$item" ] || continue
+
+        if should_keep "$item"; then
+            echo "   KEEP    $(basename "$item")"
+        else
+            echo "   DELETE  $(basename "$item")"
+            rm -rf "$item"
+        fi
+    done
+
+    echo ""
+done
+
+echo "== Done =="

@@ -11,6 +11,7 @@ SCRIPTS=(
     "build-changed"
     "move-all"
     "push-to-repo"
+    "clean-all"
 )
 
 mkdir ~/Projects/N0ctOS
