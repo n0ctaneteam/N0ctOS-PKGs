@@ -5,3 +5,4 @@ clear
 ./build-all
 ./move-all
 ./push-to-repo
+./clean-all
