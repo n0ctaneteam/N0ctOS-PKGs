@@ -2,7 +2,7 @@
 
 pkgname=n0ctos-calamares
 pkgver=3.4.2
-pkgrel=2
+pkgrel=3
 pkgdesc='GUI installer For N0ctOS Linux Distro'
 arch=('x86_64')
 license=(GPL-3.0-or-later)
