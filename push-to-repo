@@ -1,32 +1,11 @@
 #!/bin/env bash
 # 
 # 
-# PUSH THE PKGBUILD REPO
-# 
-cd ~/Projects/N0ctOS/N0ctOS-PKGBUILDs
-
-USER=$(git config user.name)
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-
-git add .
-git commit -m "pushed on $DATE by $USER"
-git push
-
+# PUSH THE PKG REPO
 # 
 # 
-# PUSH THE PKG-REPO
-# 
-# 
-mkdir ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64
-if [ -z "$(ls -A ./__export__/)" ]; then
-    echo "ERR: __export__ is empty, nothing to copy"
-    exit 1
-fi
 
-rm -rf ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64/*
-cp -r ./__export__/* ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64/
-
-cd ~/Projects/N0ctOS/N0ctOS-pkg-repo/x86_64
+cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 
 rm -f N0ctOS-pkg-repo.{db,files}*
 
@@ -37,10 +16,13 @@ rm -f N0ctOS-pkg-repo.files
 mv -f N0ctOS-pkg-repo.db.tar.zst N0ctOS-pkg-repo.db
 mv -f N0ctOS-pkg-repo.files.tar.zst N0ctOS-pkg-repo.files
 
+
+cd ~/Projects/N0ctOS/N0ctOS-PKG
+
 GIT_USER="$(git config user.name)"
 CURRENT_TIME="$(date '+%Y-%m-%d %H:%M:%S')"
 
-git checkout update
+git checkout -b $GIT_USER//$CURRENT_TIME
 git add .
 git commit -m "Update by $GIT_USER at $CURRENT_TIME"
 git push origin update
@@ -49,4 +31,4 @@ notify-send \
     -a 'N0ctOS PKG pusher' \
     -t 10000 \
     'N0ctOS PKG pusher:' \
-    "Changes Pushed !!!"
+    "Changes Pushed !!! Now wait for Being Pulled"

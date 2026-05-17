@@ -38,8 +38,9 @@ echo ""
 for subdir in "$REPO_ROOT"/*/; do
     [ -d "$subdir" ] || continue
 
-    # skip __export__
-    [[ "$(basename "$subdir")" == "__export__" ]] && continue
+    # skip folders
+    [[ "$(basename "$subdir")" == "__deployed__" ]] && continue
+    [[ "$(basename "$subdir")" == "n0ctos-keyring" ]] && continue
 
     echo ">> Cleaning: $(basename "$subdir")"
 

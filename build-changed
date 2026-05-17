@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
+
+clear
 # =========================
 # Config
 # =========================
 PREFIX="n0ctos-"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GITHUB_USER="n0ctaneteam"
-GITHUB_REPO="N0ctOS-PKGBUILDs"
+GITHUB_REPO="N0ctOS-PKGs"
 GITHUB_BRANCH="main"
 REMOTE_URL="https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git"
 
@@ -74,6 +76,179 @@ echo "Found ${#MATCHING_DIRS[@]} matching folder(s):"
 printf ' - %s\n' "${MATCHING_DIRS[@]}"
 echo
 
+
+
+# =========================
+# GPG Key Setup
+# =========================
+echo
+echo "############################################################"
+echo "###              GPG Signing Key Setup                   ###"
+echo "############################################################"
+
+# Collect keys that have secret (private) keys available — those are the ones
+# that can actually sign packages.
+mapfile -t GPG_KEYS < <(
+    gpg --list-secret-keys --with-colons 2>/dev/null \
+        | awk -F: '
+            /^sec/ { keyid = $5 }
+            /^uid/ { print keyid " — " $10; keyid="" }
+        '
+)
+
+setup_gpg_files() {
+    local KEY_ID="$1"
+
+    mkdir -p ~/.gnupg
+    chmod 700 ~/.gnupg
+
+    # Write to ~/.makepkg.conf (user-level override, no sudo needed)
+    MAKEPKG_USER_CONF="$HOME/.makepkg.conf"
+    GPGKEY_LINE="GPGKEY=\"$KEY_ID\""
+
+    if grep -q "^GPGKEY=" "$MAKEPKG_USER_CONF" 2>/dev/null; then
+        sed -i "s/^GPGKEY=.*/$GPGKEY_LINE/" "$MAKEPKG_USER_CONF"
+        echo "  Updated GPGKEY in $MAKEPKG_USER_CONF"
+    else
+        echo "$GPGKEY_LINE" >> "$MAKEPKG_USER_CONF"
+        echo "  Written GPGKEY to $MAKEPKG_USER_CONF"
+    fi
+
+    # Reload gpg-agent so the key is live immediately
+    gpg-connect-agent reloadagent /bye &>/dev/null
+    echo "  GPG agent reloaded."
+    echo "  Done — packages will be signed with key: $KEY_ID"
+}
+
+if [ ${#GPG_KEYS[@]} -eq 0 ]; then
+    # ── No keys found ────────────────────────────────────────────────────────
+    echo
+    echo "  [!] No GPG secret keys found on this machine."
+    echo "      Starting GPG key creation wizard..."
+    echo
+
+    # Collect details for an unattended batch key generation
+    read -rp "  Full Name  : " GPG_NAME
+    read -rp "  Email      : " GPG_EMAIL
+    read -rp "  Comment    (optional, press Enter to skip): " GPG_COMMENT
+    read -rsp "  Passphrase (leave blank for no passphrase): " GPG_PASS
+    echo
+
+    # Build the batch input file
+    BATCH_FILE="$(mktemp)"
+    cat > "$BATCH_FILE" <<EOF
+%echo Generating GPG key for N0ctOS package signing...
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: $GPG_NAME
+Name-Comment: ${GPG_COMMENT:-N0ctOS PKG Signing}
+Name-Email: $GPG_EMAIL
+Expire-Date: 0
+Passphrase: $GPG_PASS
+%commit
+%echo Key generation complete.
+EOF
+
+    echo "  Generating key (this may take a moment)..."
+    gpg --batch --gen-key "$BATCH_FILE"
+    GEN_EXIT=$?
+    rm -f "$BATCH_FILE"
+
+    if [ $GEN_EXIT -ne 0 ]; then
+        echo "  [ERROR] GPG key generation failed (exit $GEN_EXIT)."
+        echo "          Run 'gpg --full-gen-key' manually and re-run this script."
+        exit 1
+    fi
+
+    # Grab the fingerprint of the key we just created
+    NEW_KEY_ID="$(
+        gpg --list-secret-keys --with-colons "$GPG_EMAIL" 2>/dev/null \
+            | awk -F: '/^sec/ { print $5; exit }'
+    )"
+
+    echo
+    echo "  [OK] Key created: $NEW_KEY_ID"
+    setup_gpg_files "$NEW_KEY_ID"
+
+else
+    # ── One or more keys found ────────────────────────────────────────────────
+    echo
+    echo "  Found the following GPG secret key(s):"
+    INDEX=1
+    for KEY in "${GPG_KEYS[@]}"; do
+        echo "    $INDEX) $KEY"
+        (( INDEX++ ))
+    done
+    echo "    $INDEX) Create a new key"
+    echo
+
+    echo "  Select a key to use (overide data of ~/.makepkg.conf)"
+    read -rp  "  (default: 1) : " KEY_CHOICE
+    KEY_CHOICE="${KEY_CHOICE:-1}"
+
+    if [ "$KEY_CHOICE" -eq "$INDEX" ] 2>/dev/null; then
+        # User wants a brand-new key — fall through to the creation wizard
+        echo
+        echo "  Starting GPG key creation wizard..."
+        read -rp "  Full Name  : " GPG_NAME
+        read -rp "  Email      : " GPG_EMAIL
+        read -rp "  Comment    (optional, press Enter to skip): " GPG_COMMENT
+        read -rsp "  Passphrase (leave blank for no passphrase): " GPG_PASS
+        echo
+
+        BATCH_FILE="$(mktemp)"
+        cat > "$BATCH_FILE" <<EOF
+%echo Generating GPG key for N0ctOS package signing...
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: $GPG_NAME
+Name-Comment: ${GPG_COMMENT:-N0ctOS PKG Signing}
+Name-Email: $GPG_EMAIL
+Expire-Date: 0
+Passphrase: $GPG_PASS
+%commit
+%echo Key generation complete.
+EOF
+
+        echo "  Generating key (this may take a moment)..."
+        gpg --batch --gen-key "$BATCH_FILE"
+        GEN_EXIT=$?
+        rm -f "$BATCH_FILE"
+
+        if [ $GEN_EXIT -ne 0 ]; then
+            echo "  [ERROR] GPG key generation failed (exit $GEN_EXIT)."
+            echo "          Run 'gpg --full-gen-key' manually and re-run this script."
+            exit 1
+        fi
+
+        NEW_KEY_ID="$(
+            gpg --list-secret-keys --with-colons "$GPG_EMAIL" 2>/dev/null \
+                | awk -F: '/^sec/ { print $5; exit }'
+        )"
+
+        echo
+        echo "  [OK] Key created: $NEW_KEY_ID"
+        setup_gpg_files "$NEW_KEY_ID"
+
+    elif [ "$KEY_CHOICE" -ge 1 ] && [ "$KEY_CHOICE" -lt "$INDEX" ] 2>/dev/null; then
+        # User picked one of the existing keys
+        CHOSEN="${GPG_KEYS[$((KEY_CHOICE - 1))]}"
+        CHOSEN_ID="$(echo "$CHOSEN" | awk '{ print $1 }')"
+        echo
+        echo "  [OK] Using existing key: $CHOSEN"
+        setup_gpg_files "$CHOSEN_ID"
+
+    else
+        echo "  [WARN] Invalid selection — skipping GPG setup."
+        echo "         Run 'gpg --full-gen-key' manually and update GPGKEY in makepkg.conf."
+    fi
+fi
+
+
 # =========================
 # Loop through folders
 # =========================
@@ -85,6 +260,10 @@ CHANGED=0
 for DIR in "${MATCHING_DIRS[@]}"; do
     BASENAME="$(basename "$DIR")"
     REMOTE_DIR="$TMP_DIR/$BASENAME"
+
+    if [ "$DIR" == "__deployed__"]; then
+        continue
+    fi
 
     echo "──────────────────────────────────────"
     echo "Checking: $BASENAME"
@@ -144,6 +323,12 @@ for DIR in "${MATCHING_DIRS[@]}"; do
         )
         BUILD_EXIT=$?
         if [ $BUILD_EXIT -eq 0 ]; then
+          # delete old pkg files
+            rm -rf $SCRIPT_DIR/__deployed__/x86_64/$DIR-*
+          # move newly built files
+            mv ./*.pkg.tar.zst "$SCRIPT_DIR/__deployed__/x86_64/"
+            mv ./*.pkg.tar.zst.sig "$SCRIPT_DIR/__deployed__/x86_64/"
+          
             echo "  [OK] Build succeeded: $BASENAME"
             notify 5000 "Build Succeeded: $BASENAME" "$BASENAME compiled and signed successfully."
             (( BUILT++ ))

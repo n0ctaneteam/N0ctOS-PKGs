@@ -7,11 +7,6 @@
 
 # Allow all root-level files
 !/*
-
-# But ignore the export directory
-/__export__/
-/__export__/**
-
 # Ignore all root directories
 */**
 
@@ -21,6 +16,13 @@
 
 # Allow directories themselves
 !*/
+
+!n0ctos-keyring/**
+
+# don't ignore the deploy directory
+!/__deployed__/
+!/__deployed__/**
+
 
 # Allow only these files inside subfolders
 !*/PKGBUILD

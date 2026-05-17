@@ -4,6 +4,5 @@ set -euo pipefail
 
 clear
 ./build-changed
-./move-all
 ./push-to-repo
 ./clean-all
