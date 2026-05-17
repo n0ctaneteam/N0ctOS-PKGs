@@ -7,9 +7,9 @@ doc_url=https://n0ctaneteam.github.io/N0ctOS
 # Array of script names
 SCRIPTS=(
     "auto-all"
+    "auto-changed"
     "build-all"
     "build-changed"
-    "move-all"
     "push-to-repo"
     "clean-all"
 )
@@ -27,7 +27,7 @@ case $git_clone_type in
     "2")
         git_clone_type="full"
         echo -e "\n\n\ncloning the $git_clone_type git"
-        git clone https://github.com/n0ctaneteam/N0ctOS-pkg-repo.git
+        git clone https://github.com/n0ctaneteam/N0ctOS-PKGs.git
         ;;
     *)
         git_clone_type="latest"
@@ -152,9 +152,8 @@ else
     echo "    $INDEX) Create a new key"
     echo
 
-    echo "  Select a key to use [1]: "
-    echo
-    read -rp "  !! (will overide the config data of ~/.makepkg.conf)" KEY_CHOICE
+    echo "  Select a key to use (overide data of ~/.makepkg.conf)"
+    read -rp  "  (default: 1) : " KEY_CHOICE
     KEY_CHOICE="${KEY_CHOICE:-1}"
 
     if [ "$KEY_CHOICE" -eq "$INDEX" ] 2>/dev/null; then
