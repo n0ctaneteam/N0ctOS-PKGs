@@ -6,29 +6,73 @@
 # 
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
-
-rm -f N0ctOS-pkg-repo.{db,files}*
-
-repo-add N0ctOS-pkg-repo.db.tar.zst *.pkg.tar.zst
-rm -f N0ctOS-pkg-repo.db
-rm -f N0ctOS-pkg-repo.files
-
-mv -f N0ctOS-pkg-repo.db.tar.zst N0ctOS-pkg-repo.db
-mv -f N0ctOS-pkg-repo.files.tar.zst N0ctOS-pkg-repo.files
-
-
-cd ~/Projects/N0ctOS/N0ctOS-PKG
-
+rm -f *.{db,files}*
+repo-add N0ctOS-core.db.tar.zst *.pkg.tar.zst
+rm -f N0ctOS-core.db
+rm -f N0ctOS-core.files
+mv -f N0ctOS-core.db.tar.zst N0ctOS-core.db
+mv -f N0ctOS-core.files.tar.zst N0ctOS-core.files
+cd ~/Projects/N0ctOS/N0ctOS-PKGs
 GIT_USER="$(git config user.name)"
-CURRENT_TIME="$(date '+%Y-%m-%d %H:%M:%S')"
-
-git checkout -b $GIT_USER//$CURRENT_TIME
+CURRENT_TIME="$(date '+%Y-%m-%d/%H-%M-%S')"
+BRANCH="$GIT_USER"/"$CURRENT_TIME"
+git checkout -b $BRANCH
 git add .
 git commit -m "Update by $GIT_USER at $CURRENT_TIME"
-git push origin update
-
+git push --set-upstream origin $BRANCH
 notify-send \
     -a 'N0ctOS PKG pusher' \
     -t 10000 \
     'N0ctOS PKG pusher:' \
     "Changes Pushed !!! Now wait for Being Pulled"
+
+# ── detect changed packages ────────────────────────────────────────────────
+CHANGED_PKGS=$(git diff origin/testing --name-only \
+    | grep '__deployed__/x86_64/.*\.pkg\.tar\.zst$' \
+    | grep -v '\.sig$' \
+    | xargs -I{} basename {} \
+    | sed 's/-x86_64\.pkg\.tar\.zst$//' \
+    | sort)
+
+if [ -z "$CHANGED_PKGS" ]; then
+    notify-send \
+        -a 'N0ctOS PKG pusher' \
+        -t 5000 \
+        'N0ctOS PKG pusher:' \
+        "No package changes detected, skipping PR"
+    exit 0
+fi
+
+# ── build PR body ──────────────────────────────────────────────────────────
+PKG_COUNT=$(echo "$CHANGED_PKGS" | wc -l)
+PKG_LIST=$(echo "$CHANGED_PKGS" | sed 's/^/- /')
+
+PR_BODY="## 📦 Package Update
+
+**Pushed by:** \`$GIT_USER\`
+**Time:** \`$CURRENT_TIME\`
+**Packages changed:** $PKG_COUNT
+
+### Changed Packages
+$PKG_LIST
+
+### Admin Checklist
+- [ ] PKGBUILD looks clean
+- [ ] Package versions make sense
+- [ ] No suspicious files outside package directory
+- [ ] DB is unsigned (do not approve if \`.db.sig\` exists)
+
+> Add the \`APPROVED\` label to trigger signing and merge into \`testing\`"
+
+# ── open PR via gh cli ─────────────────────────────────────────────────────
+PR_URL=$(gh pr create \
+    --base testing \
+    --head "$BRANCH" \
+    --title "📦 [$GIT_USER] $PKG_COUNT pkg(s) updated @ $CURRENT_TIME" \
+    --body "$PR_BODY")
+
+notify-send \
+    -a 'N0ctOS PKG pusher' \
+    -t 10000 \
+    'N0ctOS PKG pusher:' \
+    "PR Created: $PR_URL"
