@@ -40,7 +40,7 @@ jobs:
             | gpg --batch --import
 
           # tell gpg to trust this key ultimately
-          echo "${{ secrets.ADMIN_GPG_KEY_ID }}:6:" \
+          echo "${{ secrets.ADMIN_GPG_KEY_ID }}" \
             | gpg --batch --import-ownertrust
 
       # ── 4. verify packages before signing anything ─────────────
