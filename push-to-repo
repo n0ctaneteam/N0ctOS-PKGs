@@ -12,8 +12,8 @@ cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
 rm -f *.{db.sig,files.sig}*
 repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
-rm -f *.{db,files}*
-rm -f *.{db.sig,files.sig}*
+rm -f *.{db,files}
+rm -f *.{db.sig,files.sig}
 mv -f N0ctOS-core.db.tar.zst N0ctOS-core.db
 mv -f N0ctOS-core.db.tar.zst.sig N0ctOS-core.db.sig
 mv -f N0ctOS-core.files.tar.zst N0ctOS-core.files
