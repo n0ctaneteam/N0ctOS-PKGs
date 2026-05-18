@@ -6,6 +6,9 @@ on:
   pull_request:
     types: [labeled]
 
+env:
+  TARGET_BRANCH: testing
+
 jobs:
   sign-and-merge:
     # only run when the label is exactly "APPROVED"
@@ -101,16 +104,21 @@ jobs:
           git commit -m "ci: admin signed repo DB [skip ci]"
           git push origin ${{ github.head_ref }}
 
-      # ── 9. merge into testing ──────────────────────────────────
-      - name: Merge into testing branch
+      # ── 9. merge into target branch ────────────────────────────
+      - name: Merge into target branch
         run: |
-          git fetch origin testing
-          git checkout testing
+          git fetch origin $TARGET_BRANCH
+          git checkout $TARGET_BRANCH
           git merge --no-ff ${{ github.head_ref }} \
-              -m "merge: ${{ github.head_ref }} into testing (admin approved)"
-          git push origin testing
+              -m "merge: ${{ github.head_ref }} into $TARGET_BRANCH (admin approved)"
+          git push origin $TARGET_BRANCH
 
-      # ── 10. comment on PR ──────────────────────────────────────
+      # ── 10. delete merged branch ───────────────────────────────
+      - name: Delete merged branch
+        run: |
+          git push origin --delete ${{ github.head_ref }}
+
+      # ── 11. comment on PR ──────────────────────────────────────
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
@@ -119,5 +127,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `✅ **DB signed and merged into \`testing\`**\n\n- All package signatures verified\n- Repo database signed by admin key\n- Branch \`${{ github.head_ref }}\` merged into \`testing\``
+              body: `✅ **DB signed and merged into \`${process.env.TARGET_BRANCH}\`**\n\n- All package signatures verified\n- Repo database signed by admin key\n- Branch \`${{ github.head_ref }}\` merged into \`${process.env.TARGET_BRANCH}\`\n- Source branch deleted`
             })
