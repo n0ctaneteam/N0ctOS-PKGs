@@ -1,5 +1,5 @@
 pkgname=n0ctos-keyring
-pkgver=20260517
+pkgver=20260518 # yyyymmdd
 pkgrel=1
 pkgdesc="N0ctOS PGP keyring"
 arch=('any')

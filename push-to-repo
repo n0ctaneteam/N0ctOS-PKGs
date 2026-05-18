@@ -24,7 +24,7 @@ notify-send \
     -a 'N0ctOS PKG pusher' \
     -t 10000 \
     'N0ctOS PKG pusher:' \
-    "Changes Pushed !!! Now wait for Being Pulled"
+    "Changes Pushed !!! Generating PR..."
 
 # ── detect changed packages ────────────────────────────────────────────────
 CHANGED_PKGS=$(git diff origin/testing --name-only \
