@@ -9,7 +9,8 @@ TARGET_REPO=main
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
-repo-add N0ctOS-core.db.tar.zst *.pkg.tar.zst
+./gpg-key-set
+repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
 rm -f N0ctOS-core.db
 rm -f N0ctOS-core.files
 mv -f N0ctOS-core.db.tar.zst N0ctOS-core.db
