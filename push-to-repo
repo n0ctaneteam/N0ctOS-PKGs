@@ -3,7 +3,9 @@
 # 
 # PUSH THE PKG REPO
 # 
-# 
+
+DIFF_REPO=main
+
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
@@ -27,7 +29,7 @@ notify-send \
     "Changes Pushed !!! Generating PR..."
 
 # ── detect changed packages ────────────────────────────────────────────────
-CHANGED_PKGS=$(git diff origin/testing --name-only \
+CHANGED_PKGS=$(git diff origin/"$DIFF_REPO" --name-only \
     | grep '__deployed__/x86_64/.*\.pkg\.tar\.zst$' \
     | grep -v '\.sig$' \
     | xargs -I{} basename {} \
