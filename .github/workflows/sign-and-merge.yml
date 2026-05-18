@@ -59,7 +59,7 @@ jobs:
       # ── 5. check that DB is NOT already signed ─────────────────
       - name: Ensure DB is unsigned
         run: |
-          if [ -f "__deployed__/x86_64/n0ctos.db.tar.gz.sig" ]; then
+          if [ -f "__deployed__/x86_64/N0ctOS-core.db.tar.gz.sig" ]; then
             echo "❌ DB is already signed — maintainers must NOT sign the DB"
             exit 1
           fi
@@ -73,7 +73,7 @@ jobs:
               --passphrase "${{ secrets.ADMIN_GPG_PASSPHRASE }}" \
               --local-user "${{ secrets.ADMIN_GPG_KEY_ID }}" \
               --detach-sign \
-              __deployed__/x86_64/n0ctos.db.tar.gz
+              __deployed__/x86_64/N0ctOS-core.db.tar.gz
 
           gpg --batch \
               --pinentry-mode loopback \
@@ -87,7 +87,7 @@ jobs:
       # ── 7. verify our own signatures ───────────────────────────
       - name: Verify DB signatures
         run: |
-          gpg --verify __deployed__/x86_64/n0ctos.db.tar.gz.sig __deployed__/x86_64/n0ctos.db.tar.gz
+          gpg --verify __deployed__/x86_64/N0ctOS-core.db.tar.gz.sig __deployed__/x86_64/N0ctOS-core.db.tar.gz
           gpg --verify __deployed__/x86_64/n0ctos.files.tar.gz.sig __deployed__/x86_64/n0ctos.files.tar.gz
           echo "✅ DB signatures verified"
 
@@ -96,7 +96,7 @@ jobs:
         run: |
           git config user.name  "N0ctOS Admin Bot"
           git config user.email "noreply@n0ctos"
-          git add __deployed__/x86_64/n0ctos.db.tar.gz.sig
+          git add __deployed__/x86_64/N0ctOS-core.db.tar.gz.sig
           git add __deployed__/x86_64/n0ctos.files.tar.gz.sig
           git commit -m "ci: admin signed repo DB [skip ci]"
           git push origin ${{ github.head_ref }}
