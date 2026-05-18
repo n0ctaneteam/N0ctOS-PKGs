@@ -8,8 +8,7 @@ PREFIX="n0ctos-"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GITHUB_USER="n0ctaneteam"
 GITHUB_REPO="N0ctOS-PKGs"
-GITHUB_BRANCH="main"
-REMOTE_URL="https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git"
+DIFF_BRANCH="main"               # branch to diff against for change detection
 
 # Files to check for changes inside each package folder
 CHECK_FILES=(
@@ -29,35 +28,30 @@ notify() {
     notify-send -a "$NOTIF_APP" -i "$NOTIF_ICON" -t "$timeout" "$summary" "$body"
 }
 
-# Temp dir to shallow-clone the remote repo into (auto-cleaned on exit)
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
-
 # =========================
-# Clone remote repo (shallow, no history needed)
+# Fetch remote (no clone needed)
 # =========================
-echo "Fetching remote repo (shallow clone)..."
-notify 5000 "Repo Check Started" "Fetching $GITHUB_REPO from GitHub..."
+echo "Fetching remote branch: $DIFF_BRANCH ..."
+notify 5000 "Repo Check Started" "Fetching origin/$DIFF_BRANCH ..."
 
-git clone --depth=1 --branch "$GITHUB_BRANCH" --quiet "$REMOTE_URL" "$TMP_DIR"
+git -C "$SCRIPT_DIR" fetch origin "$DIFF_BRANCH" --quiet
 if [ $? -ne 0 ]; then
-    echo "[ERROR] Failed to clone $REMOTE_URL"
-    echo "        Check your internet connection or repo URL."
-    notify 10000 "Repo Check Failed" "Could not clone $REMOTE_URL — check your connection."
+    echo "[ERROR] Failed to fetch origin/$DIFF_BRANCH"
+    echo "        Check your internet connection or remote config."
+    notify 10000 "Fetch Failed" "Could not fetch origin/$DIFF_BRANCH — check your connection."
     exit 1
 fi
 echo "Remote fetched OK."
-notify 5000 "Repo Fetched OK" "Successfully cloned $GITHUB_REPO."
+notify 5000 "Remote Fetched OK" "origin/$DIFF_BRANCH is up to date."
 echo
 
 # =========================
-# Find matching local folders
+# Pre-scan — diff check all folders, collect what needs building
 # =========================
-echo "Searching in: $SCRIPT_DIR"
-echo "Looking for folders starting with: $PREFIX"
+echo "Scanning for changes against origin/$DIFF_BRANCH ..."
 echo
 
-mapfile -t MATCHING_DIRS < <(
+mapfile -t ALL_DIRS < <(
     find "$SCRIPT_DIR" \
         -mindepth 1 \
         -maxdepth 1 \
@@ -66,14 +60,76 @@ mapfile -t MATCHING_DIRS < <(
         | sort
 )
 
+# MATCHING_DIRS will only contain dirs that actually need a build
+MATCHING_DIRS=()
+
+for DIR in "${ALL_DIRS[@]}"; do
+    BASENAME="$(basename "$DIR")"
+
+    [ "$BASENAME" == "__deployed__" ] && continue
+    [ ! -f "$DIR/PKGBUILD" ] && continue
+
+    DIR_DIFF_OUT=""
+    DIR_DIFF_COUNT=0
+
+    REMOTE_HAS_DIR=$(git -C "$SCRIPT_DIR" ls-tree -d "origin/$DIFF_BRANCH" "$BASENAME" 2>/dev/null)
+
+    if [ -z "$REMOTE_HAS_DIR" ]; then
+        DIR_DIFF_OUT="  [NEW] not found on origin/$DIFF_BRANCH — will build"$'\n'
+        DIR_DIFF_COUNT=1
+    else
+      for PATTERN in "${CHECK_FILES[@]}"; do
+          for LOCAL_FILE in "$DIR"/$PATTERN; do
+              [ -e "$LOCAL_FILE" ] || continue
+      
+              # preserve relative path from inside the package dir
+              # e.g. configs/hyprland.cfg  instead of just hyprland.cfg
+              RELATIVE_PATH="${LOCAL_FILE#$DIR/}"
+              REMOTE_PATH="$BASENAME/$RELATIVE_PATH"
+      
+              REMOTE_CONTENT=$(git -C "$SCRIPT_DIR" show "origin/$DIFF_BRANCH:$REMOTE_PATH" 2>/dev/null)
+              if [ $? -ne 0 ]; then
+                  DIR_DIFF_OUT+="  + new file:  $RELATIVE_PATH"$'\n'
+                  (( DIR_DIFF_COUNT++ ))
+              else
+                  LOCAL_CONTENT=$(cat "$LOCAL_FILE")
+                  if [ "$LOCAL_CONTENT" != "$REMOTE_CONTENT" ]; then
+                      DIR_DIFF_OUT+="  ~ modified:  $RELATIVE_PATH"$'\n'
+                      (( DIR_DIFF_COUNT++ ))
+                  fi
+              fi
+          done
+      done
+    fi
+
+    if [ -n "$DIR_DIFF_OUT" ]; then
+        echo "  $BASENAME  ($DIR_DIFF_COUNT file(s) changed)"
+        echo "$DIR_DIFF_OUT"
+        MATCHING_DIRS+=("$DIR")
+    fi
+done
+
 if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
-    echo "No matching folders found."
-    notify 6000 "Nothing to Do" "No local folders matching '${PREFIX}*' were found."
+    echo "Nothing to build — all packages up to date."
+    notify 6000 "Nothing to Do" "All packages match origin/$DIFF_BRANCH."
     exit 0
 fi
 
-echo "Found ${#MATCHING_DIRS[@]} matching folder(s):"
-printf ' - %s\n' "${MATCHING_DIRS[@]}"
+echo "══════════════════════════════════════"
+echo "  Packages queued to build: ${#MATCHING_DIRS[@]}"
+for DIR in "${MATCHING_DIRS[@]}"; do
+    echo "    → $(basename "$DIR")"
+done
+echo "══════════════════════════════════════"
+echo
+
+read -rp "Proceed with build? [Y/n] (default: Y): " PROCEED
+PROCEED="${PROCEED:-Y}"
+if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    notify 5000 "Build Aborted" "User chose not to proceed."
+    exit 1
+fi
 echo
 
 
@@ -259,63 +315,18 @@ CHANGED=0
 
 for DIR in "${MATCHING_DIRS[@]}"; do
     BASENAME="$(basename "$DIR")"
-    REMOTE_DIR="$TMP_DIR/$BASENAME"
 
-    if [ "$DIR" == "__deployed__"]; then
+    if [ "$BASENAME" == "__deployed__" ]; then
         continue
     fi
 
     echo "──────────────────────────────────────"
-    echo "Checking: $BASENAME"
-
-    if [ ! -f "$DIR/PKGBUILD" ]; then
-        echo "  [SKIP] No local PKGBUILD — skipping."
-        (( SKIPPED++ ))
-        continue
-    fi
-
-    if [ ! -d "$REMOTE_DIR" ]; then
-        echo "  [WARN] Folder not found in remote repo — building anyway."
-        SHOULD_BUILD=true
-    else
-        # Compare only the files defined in CHECK_FILES
-        DIFF_OUT=""
-        DIFF_COUNT=0
-        for PATTERN in "${CHECK_FILES[@]}"; do
-            for LOCAL_FILE in "$DIR"/$PATTERN; do
-                [ -e "$LOCAL_FILE" ] || continue
-                FILENAME="$(basename "$LOCAL_FILE")"
-                REMOTE_FILE="$REMOTE_DIR/$FILENAME"
-                if [ ! -f "$REMOTE_FILE" ]; then
-                    DIFF_OUT+="Only in local: $FILENAME"$'\n'
-                    (( DIFF_COUNT++ ))
-                else
-                    FILE_DIFF="$(diff -q "$LOCAL_FILE" "$REMOTE_FILE" 2>/dev/null)"
-                    if [ -n "$FILE_DIFF" ]; then
-                        DIFF_OUT+="$FILE_DIFF"$'\n'
-                        (( DIFF_COUNT++ ))
-                    fi
-                fi
-            done
-        done
-
-        if [ -z "$DIFF_OUT" ]; then
-            echo "  [SKIP] Nothing changed for $BASENAME — skipping build."
-            (( SKIPPED++ ))
-            continue
-        else
-            echo "  [CHANGED] Differences found:"
-            echo "$DIFF_OUT" | sed 's/^/    /'
-            (( CHANGED++ ))
-            notify 5000 "Changes Detected: $BASENAME" "$DIFF_COUNT file(s) differ from remote."
-            SHOULD_BUILD=true
-        fi
-    fi
+    echo "Building: $BASENAME"
 
     # =========================
     # Build
     # =========================
-    if [ "${SHOULD_BUILD:-false}" = true ]; then
+    if true; then
         notify 5000 "Build Started: $BASENAME" "Running makepkg for $BASENAME..."
         (
             cd "$DIR" || exit 1
@@ -338,7 +349,6 @@ for DIR in "${MATCHING_DIRS[@]}"; do
         fi
     fi
 
-    unset SHOULD_BUILD
 done
 
 # =========================
@@ -353,3 +363,5 @@ echo "════════════════════════�
 echo "Done."
 
 notify 8000 "Compiler Done" "Built: $BUILT  |  Skipped: $SKIPPED  |  Failed: $FAILED"
+
+exit 0

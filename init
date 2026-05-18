@@ -216,6 +216,13 @@ EOF
     fi
 fi
 
+# install gh cli
+echo -e "\n\n\n\n\n\   Setup GH-CLI"
+sudo pacman -Sy github-cli --needed --noconfirm
+
+# authenticate (one time, interactive)
+gh auth login
+
 # =========================
 # Done
 # =========================

@@ -23,6 +23,7 @@
 !/__deployed__/
 !/__deployed__/**
 
+!/.github/**
 
 # Allow only these files inside subfolders
 !*/PKGBUILD

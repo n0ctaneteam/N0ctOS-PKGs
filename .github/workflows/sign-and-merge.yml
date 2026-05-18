@@ -1,0 +1,123 @@
+# .github/workflows/sign-and-merge.yml
+
+name: Sign DB and Merge to Testing
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  sign-and-merge:
+    # only run when the label is exactly "APPROVED"
+    if: github.event.label.name == 'APPROVED'
+    runs-on: ubuntu-latest
+    environment: pkg-sign-and-merge
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      # ── 1. checkout the PR branch ──────────────────────────────
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. install gnupg ───────────────────────────────────────
+      - name: Install dependencies
+        run: sudo apt-get install -y gnupg
+
+      # ── 3. import the admin signing key from secrets ───────────
+      - name: Import admin GPG key
+        run: |
+          echo "${{ secrets.ADMIN_GPG_PRIVATE_KEY }}" \
+            | gpg --batch --import
+
+          # tell gpg to trust this key ultimately
+          echo "${{ secrets.ADMIN_GPG_KEY_ID }}:6:" \
+            | gpg --batch --import-ownertrust
+
+      # ── 4. verify packages before signing anything ─────────────
+      - name: Verify package signatures
+        run: |
+          echo "${{ secrets.MAINTAINERS_GPG_PUBKEYS }}" \
+            | gpg --batch --import
+
+          for sig in __deployed__/x86_64/*.pkg.tar.zst.sig; do
+            pkg="${sig%.sig}"
+            echo "── verifying $pkg"
+            gpg --verify "$sig" "$pkg" || {
+              echo "❌ FAILED: $pkg has invalid or unknown signature"
+              exit 1
+            }
+          done
+          echo "✅ all package signatures valid"
+
+      # ── 5. check that DB is NOT already signed ─────────────────
+      - name: Ensure DB is unsigned
+        run: |
+          if [ -f "__deployed__/x86_64/N0ctOS-core.db.tar.gz.sig" ]; then
+            echo "❌ DB is already signed — maintainers must NOT sign the DB"
+            exit 1
+          fi
+          echo "✅ DB is unsigned, safe to proceed"
+
+      # ── 6. sign the repo database ──────────────────────────────
+      - name: Sign repo database
+        run: |
+          gpg --batch \
+              --pinentry-mode loopback \
+              --passphrase "${{ secrets.ADMIN_GPG_PASSPHRASE }}" \
+              --local-user "${{ secrets.ADMIN_GPG_KEY_ID }}" \
+              --detach-sign \
+              __deployed__/x86_64/N0ctOS-core.db.tar.gz
+
+          gpg --batch \
+              --pinentry-mode loopback \
+              --passphrase "${{ secrets.ADMIN_GPG_PASSPHRASE }}" \
+              --local-user "${{ secrets.ADMIN_GPG_KEY_ID }}" \
+              --detach-sign \
+              __deployed__/x86_64/n0ctos.files.tar.gz
+
+          echo "✅ DB and files index signed"
+
+      # ── 7. verify our own signatures ───────────────────────────
+      - name: Verify DB signatures
+        run: |
+          gpg --verify __deployed__/x86_64/N0ctOS-core.db.tar.gz.sig __deployed__/x86_64/N0ctOS-core.db.tar.gz
+          gpg --verify __deployed__/x86_64/n0ctos.files.tar.gz.sig __deployed__/x86_64/n0ctos.files.tar.gz
+          echo "✅ DB signatures verified"
+
+      # ── 8. commit the signatures back to the PR branch ─────────
+      - name: Commit signatures
+        run: |
+          git config user.name  "N0ctOS Admin Bot"
+          git config user.email "noreply@n0ctos"
+          git add __deployed__/x86_64/N0ctOS-core.db.tar.gz.sig
+          git add __deployed__/x86_64/n0ctos.files.tar.gz.sig
+          git commit -m "ci: admin signed repo DB [skip ci]"
+          git push origin ${{ github.head_ref }}
+
+      # ── 9. merge into testing ──────────────────────────────────
+      - name: Merge into testing branch
+        run: |
+          git fetch origin testing
+          git checkout testing
+          git merge --no-ff ${{ github.head_ref }} \
+              -m "merge: ${{ github.head_ref }} into testing (admin approved)"
+          git push origin testing
+
+      # ── 10. comment on PR ──────────────────────────────────────
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ **DB signed and merged into \`testing\`**\n\n- All package signatures verified\n- Repo database signed by admin key\n- Branch \`${{ github.head_ref }}\` merged into \`testing\``
+            })
