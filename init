@@ -12,6 +12,7 @@ SCRIPTS=(
     "build-changed"
     "push-to-repo"
     "clean-all"
+    "gpg-key-set"
 )
 
 mkdir ~/Projects/N0ctOS
