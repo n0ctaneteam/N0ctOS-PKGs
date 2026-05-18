@@ -5,7 +5,7 @@
 # 
 
 DIFF_REPO=main
-
+TARGET_REPO=main
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
@@ -68,7 +68,7 @@ $PKG_LIST
 
 # ── open PR via gh cli ─────────────────────────────────────────────────────
 PR_URL=$(gh pr create \
-    --base testing \
+    --base $TARGET_REPO \
     --head "$BRANCH" \
     --title "📦 [$GIT_USER] $PKG_COUNT pkg(s) updated @ $CURRENT_TIME" \
     --body "$PR_BODY")
