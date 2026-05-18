@@ -31,16 +31,26 @@ if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
     exit 0
 fi
 
-TOTAL=${#MATCHING_DIRS[@]}
-echo "Found $TOTAL matching folder(s):"
-printf ' - %s\n' "${MATCHING_DIRS[@]}"
+echo "══════════════════════════════════════"
+echo "  Packages queued to build: ${#MATCHING_DIRS[@]}"
+for DIR in "${MATCHING_DIRS[@]}"; do
+    echo "    → $(basename "$DIR")"
+done
+echo "══════════════════════════════════════"
+echo
+
+read -rp "Proceed with build? [Y/n] (default: Y): " PROCEED
+PROCEED="${PROCEED:-Y}"
+if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    notify-send 5000 "Build Aborted" "User chose not to proceed."
+    exit 1
+fi
 echo
 
 notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
     -i system-run \
     'N0ctOS PKGBUILD compiler' "Starting build of $TOTAL package(s)…"
-
-
 # =========================
 # GPG Key Setup
 # =========================
@@ -291,3 +301,5 @@ else
         'N0ctOS PKGBUILD compiler — Done (with errors)' \
         "✔ $BUILT built  |  $SKIPPED skipped  |  ✘ $FAILED failed"
 fi
+
+exit 0

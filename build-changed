@@ -128,7 +128,7 @@ PROCEED="${PROCEED:-Y}"
 if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
     echo "Aborted."
     notify 5000 "Build Aborted" "User chose not to proceed."
-    exit
+    exit 1
 fi
 echo
 
@@ -363,3 +363,5 @@ echo "════════════════════════�
 echo "Done."
 
 notify 8000 "Compiler Done" "Built: $BUILT  |  Skipped: $SKIPPED  |  Failed: $FAILED"
+
+exit 0
