@@ -46,7 +46,7 @@ if [ -z "$CHANGED_PKGS" ]; then
 fi
 
 # ── build PR body ──────────────────────────────────────────────────────────
-PKG_COUNT=$(echo "$CHANGED_PKGS" | wc -l)
+PKG_COUNT=$(( $(wc -l <<< "$CHANGED_PKGS") / 2 ))
 PKG_LIST=$(echo "$CHANGED_PKGS" | sed 's/^/- /')
 
 PR_BODY="## 📦 Package Update
