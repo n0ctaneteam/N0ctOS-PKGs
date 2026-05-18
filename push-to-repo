@@ -6,14 +6,18 @@
 
 DIFF_REPO=main
 TARGET_REPO=main
+./gpg-key-set
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
-repo-add N0ctOS-core.db.tar.zst *.pkg.tar.zst
-rm -f N0ctOS-core.db
-rm -f N0ctOS-core.files
+rm -f *.{db.sig,files.sig}*
+repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
+rm -f *.{db,files}
+rm -f *.{db.sig,files.sig}
 mv -f N0ctOS-core.db.tar.zst N0ctOS-core.db
+mv -f N0ctOS-core.db.tar.zst.sig N0ctOS-core.db.sig
 mv -f N0ctOS-core.files.tar.zst N0ctOS-core.files
+mv -f N0ctOS-core.files.tar.zst.sig N0ctOS-core.files.sig
 cd ~/Projects/N0ctOS/N0ctOS-PKGs
 GIT_USER="$(git config user.name)"
 CURRENT_TIME="$(date '+%Y-%m-%d/%H-%M-%S')"
