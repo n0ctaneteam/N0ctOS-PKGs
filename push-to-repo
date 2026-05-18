@@ -6,11 +6,11 @@
 
 DIFF_REPO=main
 TARGET_REPO=main
+./gpg-key-set
 
 cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
 rm -f *.{db,files}*
 rm -f *.{db.sig,files.sig}*
-./gpg-key-set
 repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
 rm -f *.{db,files}*
 rm -f *.{db.sig,files.sig}*
