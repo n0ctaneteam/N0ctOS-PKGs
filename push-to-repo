@@ -1,31 +1,41 @@
 #!/bin/env bash
-# 
-# 
+#
 # PUSH THE PKG REPO
-# 
+#
 
 DIFF_REPO=main
 TARGET_REPO=main
+DEPLOY_DIR=~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
+REPO_DIR=~/Projects/N0ctOS/N0ctOS-PKGs
+
 ./gpg-key-set
 
-cd ~/Projects/N0ctOS/N0ctOS-PKGs/__deployed__/x86_64
-rm -f *.{db,files}*
-rm -f *.{db.sig,files.sig}*
+cd "$DEPLOY_DIR"
+
+# clean old db files only
+rm -f *.{db,files,db.sig,files.sig}
+rm -f *.{db.tar.zst,files.tar.zst,db.tar.zst.sig,files.tar.zst.sig}
+
+# rebuild db from whatever .pkg.tar.zst files are here
 repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
-rm -f *.{db,files}
-rm -f *.{db.sig,files.sig}
-mv -f N0ctOS-core.db.tar.zst N0ctOS-core.db
+
+# rename .tar.zst → bare db/files names (what pacman expects over raw URLs)
+mv -f N0ctOS-core.db.tar.zst     N0ctOS-core.db
 mv -f N0ctOS-core.db.tar.zst.sig N0ctOS-core.db.sig
-mv -f N0ctOS-core.files.tar.zst N0ctOS-core.files
+mv -f N0ctOS-core.files.tar.zst     N0ctOS-core.files
 mv -f N0ctOS-core.files.tar.zst.sig N0ctOS-core.files.sig
-cd ~/Projects/N0ctOS/N0ctOS-PKGs
+
+cd "$REPO_DIR"
+
 GIT_USER="$(git config user.name)"
 CURRENT_TIME="$(date '+%Y-%m-%d/%H-%M-%S')"
 BRANCH="$GIT_USER"/"$CURRENT_TIME"
-git checkout -b $BRANCH
+
+git checkout -b "$BRANCH"
 git add .
 git commit -m "Update by $GIT_USER at $CURRENT_TIME"
-git push --set-upstream origin $BRANCH
+git push --set-upstream origin "$BRANCH"
+
 notify-send \
     -a 'N0ctOS PKG pusher' \
     -t 10000 \
@@ -54,7 +64,6 @@ PKG_COUNT=$(( $(wc -l <<< "$CHANGED_PKGS") / 2 ))
 PKG_LIST=$(echo "$CHANGED_PKGS" | sed 's/^/- /')
 
 PR_BODY="## 📦 Package Update
-
 **Pushed by:** \`$GIT_USER\`
 **Time:** \`$CURRENT_TIME\`
 **Packages changed:** $PKG_COUNT
