@@ -2,13 +2,12 @@
 
 pkgname=n0ctos-keyring
 pkgver=1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="N0ctOS PGP keyring"
-arch=('x86_64')
+arch=('any')
 url="https://github.com/n0ctaneteam/N0ctOS-PKGs"
 license=('GPL3')
 install=n0ctos-keyring.install
-sha256sums=('SKIP')
 provides=("n0ctos-keyring")
 conflicts=("n0ctos-keyring")
 
