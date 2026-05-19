@@ -1,4 +1,4 @@
-# Maintainer: N0ctane._.Dev <your@email.com>
+# Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
 
 pkgname=n0ctos-keyring
 pkgver=1.0
@@ -8,9 +8,12 @@ arch=('any')
 url="https://github.com/n0ctaneteam/N0ctOS-PKGs"
 license=('GPL3')
 install=n0ctos-keyring.install
+provides=("n0ctos-keyring")
+conflicts=("n0ctos-keyring")
 source=()
+sha256sums=()
 
-prepare() {
+build() {
     local contributors_dir="$startdir/contributors"
     local keyring_dir="$startdir/keyring"
     local gpg_tmp
