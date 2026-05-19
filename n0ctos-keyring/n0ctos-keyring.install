@@ -1,0 +1,7 @@
+post_install() {
+    pacman-key --populate n0ctos
+}
+
+post_upgrade() {
+    pacman-key --populate n0ctos
+}
