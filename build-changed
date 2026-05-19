@@ -123,6 +123,8 @@ done
 echo "══════════════════════════════════════"
 echo
 
+TOTAL=${#MATCHING_DIRS[@]}
+
 read -rp "Proceed with build? [Y/n] (default: Y): " PROCEED
 PROCEED="${PROCEED:-Y}"
 if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
@@ -160,6 +162,13 @@ for DIR in "${MATCHING_DIRS[@]}"; do
         notify 5000 "Build Started: $BASENAME" "Running makepkg for $BASENAME..."
         (
             cd "$DIR" || exit 1
+        
+            if [[ -f "build.sh" ]]; then
+                echo "--> running build.sh in $DIR"
+                chmod +x build.sh
+                bash build.sh
+            fi
+        
             makepkg -sCcf --sign
         )
         BUILD_EXIT=$?

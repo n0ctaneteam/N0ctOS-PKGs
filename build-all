@@ -48,6 +48,8 @@ if [[ ! "$PROCEED" =~ ^[Yy]$ ]]; then
 fi
 echo
 
+TOTAL=${#MATCHING_DIRS[@]}
+
 notify-send -a 'N0ctOS PKGBUILD compiler' -t 5000 \
     -i system-run \
     'N0ctOS PKGBUILD compiler' "Starting build of $TOTAL package(s)…"
@@ -86,6 +88,13 @@ for DIR in "${MATCHING_DIRS[@]}"; do
 
     (
         cd "$DIR" || exit 1
+    
+        if [[ -f "build.sh" ]]; then
+            echo "--> running build.sh in $DIR"
+            chmod +x build.sh
+            bash build.sh
+        fi
+    
         makepkg -sCcf --sign
     )
     BUILD_EXIT=$?

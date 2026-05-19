@@ -2,7 +2,7 @@
 
 pkgname=n0ctos-hyprland
 pkgver=0.55.1
-pkgrel=2
+pkgrel=3
 pkgdesc="Hyprland for N0ctOS, pre-configured and tested"
 arch=(x86_64 aarch64)
 url="https://github.com/hyprwm/Hyprland"
@@ -67,7 +67,7 @@ optdepends=('cmake: to build and install plugins using hyprpm'
             'xdg-desktop-portal-hyprland: xdg-desktop-portal backend for hyprland')
 provides=(hyprland wayland-compositor)
 conflicts=(hyprland)
-
+options=('!debug')
 _archive="hyprland-$pkgver"
 
 source=("$_archive.tar.gz::https://github.com/hyprwm/Hyprland/releases/download/v$pkgver/source-v$pkgver.tar.gz")

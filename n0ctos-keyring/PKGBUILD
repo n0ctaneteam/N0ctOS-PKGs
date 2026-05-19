@@ -10,66 +10,16 @@ license=('GPL3')
 install=n0ctos-keyring.install
 provides=("n0ctos-keyring")
 conflicts=("n0ctos-keyring")
-source=()
-sha256sums=()
+source=(
+  "n0ctos.gpg"
+  "n0ctos-trusted"
+  "n0ctos-revoked"
+)
+sha256sums=('SKIP' 'SKIP' 'SKIP')
 
-build() {
-    local contributors_dir="$startdir/contributors"
-    local keyring_dir="$startdir/keyring"
-    local gpg_tmp
-    gpg_tmp="$(mktemp -d)"
-
-    cleanup() { rm -rf "$gpg_tmp"; }
-    trap cleanup EXIT
-
-    chmod 700 "$gpg_tmp"
-    mkdir -p "$keyring_dir"
-
-    local keyids=()
-
-    for dir in "$contributors_dir"/*/; do
-        local name keyfile tomlfile keyid
-        name="$(basename "$dir")"
-        keyfile="$dir/pubkey.asc"
-        tomlfile="$dir/info.toml"
-
-        if [[ ! -f "$keyfile" ]]; then
-            echo "[WARN] no pubkey.asc in $name/, skipping"
-            continue
-        fi
-
-        echo "--> importing: $name"
-        GNUPGHOME="$gpg_tmp" gpg --import "$keyfile" 2>/dev/null
-
-        if [[ -f "$tomlfile" ]]; then
-            keyid=$(grep 'keyid' "$tomlfile" | sed 's/.*= *"\(.*\)"/\1/')
-            keyids+=("$keyid")
-            echo "    key: $keyid"
-        else
-            echo "[WARN] no info.toml in $name/, skipping trusted entry"
-        fi
-    done
-
-    if [[ ${#keyids[@]} -eq 0 ]]; then
-        error "no contributor keys found. add at least one contributor."
-        return 1
-    fi
-
-    echo "--> exporting bundle -> keyring/n0ctos.gpg"
-    GNUPGHOME="$gpg_tmp" gpg --export "${keyids[@]}" > "$keyring_dir/n0ctos.gpg"
-
-    echo "--> writing keyring/n0ctos-trusted"
-    printf '%s\n' "${keyids[@]}" > "$keyring_dir/n0ctos-trusted"
-
-    if [[ ! -f "$keyring_dir/n0ctos-revoked" ]]; then
-        touch "$keyring_dir/n0ctos-revoked"
-    fi
-
-    echo "--> keyring ready (${#keyids[@]} keys)"
-}
 
 package() {
-    install -Dm644 "$startdir/keyring/n0ctos.gpg"     "$pkgdir/usr/share/pacman/keyrings/n0ctos.gpg"
-    install -Dm644 "$startdir/keyring/n0ctos-trusted"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-trusted"
-    install -Dm644 "$startdir/keyring/n0ctos-revoked"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-revoked"
+    install -Dm644 "$startdir/n0ctos.gpg"     "$pkgdir/usr/share/pacman/keyrings/n0ctos.gpg"
+    install -Dm644 "$startdir/n0ctos-trusted"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-trusted"
+    install -Dm644 "$startdir/n0ctos-revoked"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-revoked"
 }

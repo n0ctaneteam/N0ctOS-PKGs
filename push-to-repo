@@ -16,7 +16,7 @@ cd "$DEPLOY_DIR"
 rm -f N0ctOS-core.*
 
 # rebuild db from whatever .pkg.tar.zst files are here
-repo-add N0ctOS-core.db.tar.zst *.pkg.tar.zst
+repo-add --sign N0ctOS-core.db.tar.zst *.pkg.tar.zst
 
 # rename .tar.zst → bare db/files names (what pacman expects over raw URLs)
 mv -f N0ctOS-core.db.tar.zst     N0ctOS-core.db
