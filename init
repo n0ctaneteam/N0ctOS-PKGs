@@ -38,10 +38,6 @@ case $git_clone_type in
 esac
 
 
-cd ~/Projects/N0ctOS/N0ctOS-PKGs
-git lfs install
-git lfs track "*.pkg.tar.zst"
-
 for FILE in "${SCRIPTS[@]}"; do
     chmod +x ~/Projects/N0ctOS/N0ctOS-PKGs/"$FILE"
     echo "chmod-ed $FILE"

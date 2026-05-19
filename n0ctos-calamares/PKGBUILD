@@ -2,7 +2,7 @@
 
 pkgname=n0ctos-calamares
 pkgver=3.4.2
-pkgrel=3
+pkgrel=4
 pkgdesc='GUI installer For N0ctOS Linux Distro'
 arch=('x86_64')
 license=(GPL-3.0-or-later)
@@ -29,7 +29,7 @@ makedepends=(
 sha256sums=('SKIP')
 # Bootloader
 source=(calamares::"git+${url}.git#branch=main")
-options=('!emptydirs')
+options=('!emptydirs' '!debug')
 
 prepare() {
     cd ${srcdir}/calamares

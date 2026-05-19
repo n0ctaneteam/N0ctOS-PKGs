@@ -1,7 +1,0 @@
-# n0ctos-revoked
-# one key ID per line
-# keys here are disabled on pacman-key --populate
-# add a key here when a maintainer leaves or key is compromised
-#
-# example:
-# DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF

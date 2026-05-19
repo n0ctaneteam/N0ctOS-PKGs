@@ -1,7 +1,0 @@
-# .gitignore (inside n0ctos-keyring/)
-keyring/n0ctos.gpg
-keyring/n0ctos-trusted
-src/
-pkg/
-*.pkg.tar.zst
-*.pkg.tar.xz
