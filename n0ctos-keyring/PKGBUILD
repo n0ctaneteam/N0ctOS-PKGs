@@ -8,8 +8,7 @@ arch=('x86_64')
 url="https://github.com/n0ctaneteam/N0ctOS-PKGs"
 license=('GPL3')
 install=n0ctos-keyring.install
-source=()
-sha256sums=()
+sha256sums=('SKIP')
 provides=("n0ctos-keyring")
 conflicts=("n0ctos-keyring")
 
