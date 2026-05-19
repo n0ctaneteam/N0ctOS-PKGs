@@ -42,7 +42,7 @@ echo "--> exporting bundle -> keyring/n0ctos.gpg"
 GNUPGHOME="$gpg_tmp" gpg --export "${keyids[@]}" > "$keyring_dir/n0ctos.gpg"
 
 echo "--> writing keyring/n0ctos-trusted"
-printf '%s\n' "${keyids[@]}" > "$keyring_dir/n0ctos-trusted"
+printf '%s:6:\n' "${keyids[@]}" > "$keyring_dir/n0ctos-trusted"
 
 if [[ ! -f "$keyring_dir/n0ctos-revoked" ]]; then
     touch "$keyring_dir/n0ctos-revoked"
