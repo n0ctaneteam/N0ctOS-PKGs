@@ -112,7 +112,7 @@ done
 if [ ${#MATCHING_DIRS[@]} -eq 0 ]; then
     echo "Nothing to build — all packages up to date."
     notify 6000 "Nothing to Do" "All packages match origin/$DIFF_BRANCH."
-    exit 0
+    exit 1
 fi
 
 echo "══════════════════════════════════════"
@@ -194,4 +194,4 @@ echo "Done."
 
 notify 8000 "Compiler Done" "Built: $BUILT  |  Skipped: $SKIPPED  |  Failed: $FAILED"
 
-exit 0
+exit $BUILD_EXIT

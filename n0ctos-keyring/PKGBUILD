@@ -1,15 +1,14 @@
-# Maintainer: n0ctanedev <your@email.com>
+# Maintainer: N0ctane._.Dev <your@email.com>
 
 pkgname=n0ctos-keyring
 pkgver=1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="N0ctOS PGP keyring"
 arch=('any')
 url="https://github.com/n0ctaneteam/N0ctOS-PKGs"
 license=('GPL3')
 install=n0ctos-keyring.install
-provides=("n0ctos-keyring")
-conflicts=("n0ctos-keyring")
+source=()
 
 prepare() {
     local contributors_dir="$startdir/contributors"
@@ -59,7 +58,6 @@ prepare() {
     echo "--> writing keyring/n0ctos-trusted"
     printf '%s\n' "${keyids[@]}" > "$keyring_dir/n0ctos-trusted"
 
-    # create revoked file if it doesn't exist yet
     if [[ ! -f "$keyring_dir/n0ctos-revoked" ]]; then
         touch "$keyring_dir/n0ctos-revoked"
     fi
@@ -68,7 +66,7 @@ prepare() {
 }
 
 package() {
-    install -Dm644 "$startdir/keyring/n0ctos.gpg"      "$pkgdir/usr/share/pacman/keyrings/n0ctos.gpg"
-    install -Dm644 "$startdir/keyring/n0ctos-trusted"   "$pkgdir/usr/share/pacman/keyrings/n0ctos-trusted"
-    install -Dm644 "$startdir/keyring/n0ctos-revoked"   "$pkgdir/usr/share/pacman/keyrings/n0ctos-revoked"
+    install -Dm644 "$startdir/keyring/n0ctos.gpg"     "$pkgdir/usr/share/pacman/keyrings/n0ctos.gpg"
+    install -Dm644 "$startdir/keyring/n0ctos-trusted"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-trusted"
+    install -Dm644 "$startdir/keyring/n0ctos-revoked"  "$pkgdir/usr/share/pacman/keyrings/n0ctos-revoked"
 }

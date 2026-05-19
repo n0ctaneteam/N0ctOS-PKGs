@@ -134,4 +134,4 @@ else
         "✔ $BUILT built  |  $SKIPPED skipped  |  ✘ $FAILED failed"
 fi
 
-exit 0
+exit $BUILD_EXIT
