@@ -1,11 +1,12 @@
 # Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
 
 pkgname=n0ctos-hyprland
-pkgver=0.55.1
-pkgrel=3
+pkgver=0.55.2
+pkgrel=1
 pkgdesc="Hyprland for N0ctOS, pre-configured and tested"
 arch=(x86_64 aarch64)
 url="https://github.com/hyprwm/Hyprland"
+config_url="https://github.com/n0ctaneteam/N0ctOS-hyprland"
 license=(BSD-3-Clause)
 depends=(cairo
          aquamarine libaquamarine.so
@@ -35,12 +36,14 @@ depends=(cairo
          lua
          mesa
          muparser
+         n0ctos-runapp
          opengl-driver
          pango libpango-1.0.so libpangocairo-1.0.so
          pixman libpixman-1.so
          re2 libre2.so
          tomlplusplus libtomlplusplus.so
          util-linux-libs libuuid.so
+         uwsm
          wayland libwayland-server.so
          wayland-protocols
          xcb-proto
@@ -70,8 +73,11 @@ conflicts=(hyprland)
 options=('!debug')
 _archive="hyprland-$pkgver"
 
-source=("$_archive.tar.gz::https://github.com/hyprwm/Hyprland/releases/download/v$pkgver/source-v$pkgver.tar.gz")
-sha256sums=('e2572b48f4461a278b85562d9c6f715a9e232e6d457153334e53648d9a516ff6')
+source=(
+    "$_archive.tar.gz::https://github.com/hyprwm/Hyprland/releases/download/v$pkgver/source-v$pkgver.tar.gz"
+    "hypr.cfg::git+${config_url}.git#branch=main"
+)
+sha256sums=('SKIP' 'SKIP')
 
 prepare() {
     ln -sf hyprland-source "$_archive"
@@ -90,9 +96,9 @@ package() {
     rm -fv "$pkgdir/usr/include/hyprland/src/version.h.in"
     install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
 
-    # N0ctOS configs — dynamic, just drop files into hypr.cfg/ to bundle them
+    # N0ctOS configs
     install -dm755 "$pkgdir/usr/share/N0ctOS/config/hypr"
-    for f in "$startdir/hypr.cfg/"*; do
+    for f in "$srcdir/hypr.cfg/"*; do
         [ -f "$f" ] && install -m644 "$f" "$pkgdir/usr/share/N0ctOS/config/hypr/"
     done
 }
