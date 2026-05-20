@@ -1,0 +1,26 @@
+# PKGBUILD from AUR
+# Original Maintainer: Carlo Teubner <carlo@cteubner.net>
+# N0ctos (fork) Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
+pkgname=n0ctos-runapp
+pkgver=0.5.1
+pkgrel=1
+pkgdesc="Application runner for Linux desktop environments that integrate with systemd"
+arch=('x86_64')
+depends=('systemd-libs')
+provides=('runapp')
+conflicts=('runapp')
+url="https://github.com/c4rlo/runapp"
+license=('MIT')
+source=("${url}/archive/${pkgver}.tar.gz")
+sha256sums=('SKIP')
+options=('!debug')
+
+build() {
+  cd "runapp-$pkgver"
+  make release
+}
+
+package() {
+  cd "runapp-$pkgver"
+  make DESTDIR="$pkgdir/" prefix=/usr install_runner= install
+}

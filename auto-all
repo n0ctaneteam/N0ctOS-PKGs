@@ -3,5 +3,5 @@ set -euo pipefail
 clear
 
 ./build-all
-./push-to-repo
 ./clean-all
+./push-to-repo
