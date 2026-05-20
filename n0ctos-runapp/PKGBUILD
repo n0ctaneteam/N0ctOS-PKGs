@@ -13,6 +13,7 @@ url="https://github.com/c4rlo/runapp"
 license=('MIT')
 source=("${url}/archive/${pkgver}.tar.gz")
 sha256sums=('SKIP')
+options=('!debug')
 
 build() {
   cd "runapp-$pkgver"
