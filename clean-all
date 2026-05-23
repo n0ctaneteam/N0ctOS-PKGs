@@ -7,6 +7,8 @@
 KEEP=(
     "PKGBUILD"
     ".SRCINFO"
+    'config.*'
+    '*.desktop'
     # "*.cfg"
     # "*.cfg/**"
 )
@@ -44,18 +46,10 @@ for subdir in "$REPO_ROOT"/*/; do
 
     echo ">> Cleaning: $(basename "$subdir")"
 
-    for item in "$subdir"* "$subdir".*; do
-        [[ "$(basename "$item")" == "." || "$(basename "$item")" == ".." ]] && continue
-        [ -e "$item" ] || continue
-
-        if should_keep "$item"; then
-            echo "   KEEP    $(basename "$item")"
-        else
-            echo "   DELETE  $(basename "$item")"
-            rm -rf "$item"
-        fi
-    done
-
+    cd ${subdir}
+    rm -r src
+    rm -r pkg
+    rm *.tar.*
     echo ""
 done
 
