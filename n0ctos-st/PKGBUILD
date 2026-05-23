@@ -18,6 +18,7 @@ sha256sums=(
   'SKIP'
 )
 _sourcedir=$_pkgname-$pkgver
+options=('!debug')
 
 prepare() {
   patch -d "$_sourcedir" -p 0 < terminfo.patch
