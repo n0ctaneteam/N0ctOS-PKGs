@@ -7,6 +7,8 @@
 KEEP=(
     "PKGBUILD"
     ".SRCINFO"
+    'config.*'
+    '*.desktop'
     # "*.cfg"
     # "*.cfg/**"
 )

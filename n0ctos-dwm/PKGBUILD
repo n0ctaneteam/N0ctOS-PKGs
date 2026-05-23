@@ -1,0 +1,38 @@
+# Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
+pkgname=n0ctos-dwm
+_pkgname=dwm
+pkgver=6.5
+pkgrel=1
+pkgdesc="Dynamic window manager - suckless, minimal, tiling"
+arch=('x86_64')
+url="https://dwm.suckless.org"
+license=('MIT')
+depends=('libx11' 'libxinerama' 'libxft' 'freetype2')
+makedepends=('git')
+source=(
+    "https://dl.suckless.org/dwm/dwm-${pkgver}.tar.gz"
+    "config.h"
+    "dwm.desktop"
+)
+sha256sums=(
+    'SKIP'
+    'SKIP'
+    'SKIP'
+)
+provides=('dwm')
+conflicts=('dwm')
+options=('zipman' '!debug')
+
+
+prepare() {
+    cd "$srcdir/dwm-${pkgver}"
+    cp "$srcdir/config.h" config.h
+}
+
+package() {
+  cd "$srcdir/$_pkgname-$pkgver"
+  make PREFIX=/usr DESTDIR="$pkgdir" clean install
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$_pkgname/LICENSE"
+  install -Dm644 README "$pkgdir/usr/share/doc/$_pkgname/README"
+  install -Dm644 "$srcdir/dwm.desktop" "$pkgdir/usr/share/xsessions/dwm.desktop"
+}
