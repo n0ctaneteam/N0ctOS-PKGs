@@ -1,0 +1,29 @@
+# Maintainer: N0ctane._.Dev <n0ctanedev@gmail.com>
+
+pkgname=n0ctos-iso-pkgs
+pkgver=1.0
+pkgrel=1
+pkgdesc="Meta package containing core packages for the N0ctOS live ISO"
+arch=('x86_64')
+url="https://github.com/n0ctaneteam"
+license=('GPL3')
+
+depends=(
+    n0ctos-dwm
+    n0ctos-st
+    n0ctos-calamares
+
+    xorg-server
+    xorg-xinit
+    xorg-xrandr
+    xorg-xsetroot
+
+    gparted
+    dmenu
+    feh
+    picom
+)
+
+package() {
+    echo "N0ctOS ISO Meta Package Install"
+}
