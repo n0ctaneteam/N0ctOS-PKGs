@@ -2,7 +2,7 @@
 
 pkgname=n0ctos-iso-pkgs
 pkgver=1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Meta package containing core packages for the N0ctOS live ISO"
 arch=('x86_64')
 url="https://github.com/n0ctaneteam"
@@ -17,6 +17,7 @@ depends=(
     xorg-xinit
     xorg-xrandr
     xorg-xsetroot
+    xdotool
 
     gparted
     dmenu
