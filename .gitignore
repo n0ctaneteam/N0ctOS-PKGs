@@ -1,31 +1,31 @@
-# Ignore everything by default
-*
+# # Ignore everything by default
+# *
 
-# =========================
-# ROOT FILES
-# =========================
+# # =========================
+# # ROOT FILES
+# # =========================
 
-# Allow all root-level files
-!/*
-# Ignore all root directories
-*/**
+# # Allow all root-level files
+# !/*
+# # Ignore all root directories
+# */**
 
-# =========================
-# SUBFOLDER ALLOWED FILES
-# =========================
+# # =========================
+# # SUBFOLDER ALLOWED FILES
+# # =========================
 
-# Allow directories themselves
-!*/
+# # Allow directories themselves
+# !*/
 
-!n0ctos-keyring/**
+# !n0ctos-keyring/**
 
-# don't ignore the deploy directory
-!/__deployed__/
-!/__deployed__/**
+# # don't ignore the deploy directory
+# !/__deployed__/
+# !/__deployed__/**
 
-!/.github/**
+# !/.github/**
 
-# Allow only these files inside subfolders
-!*/PKGBUILD
-!*/.SRCINFO
-!*/*.cfg/**
+# # Allow only these files inside subfolders
+# !*/PKGBUILD
+# !*/.SRCINFO
+# !*/*.cfg/**

@@ -81,12 +81,12 @@ for DIR in "${ALL_DIRS[@]}"; do
       for PATTERN in "${CHECK_FILES[@]}"; do
           for LOCAL_FILE in "$DIR"/$PATTERN; do
               [ -e "$LOCAL_FILE" ] || continue
-      
+
               # preserve relative path from inside the package dir
               # e.g. configs/hyprland.cfg  instead of just hyprland.cfg
               RELATIVE_PATH="${LOCAL_FILE#$DIR/}"
               REMOTE_PATH="$BASENAME/$RELATIVE_PATH"
-      
+
               REMOTE_CONTENT=$(git -C "$SCRIPT_DIR" show "origin/$DIFF_BRANCH:$REMOTE_PATH" 2>/dev/null)
               if [ $? -ne 0 ]; then
                   DIR_DIFF_OUT+="  + new file:  $RELATIVE_PATH"$'\n'
@@ -162,13 +162,18 @@ for DIR in "${MATCHING_DIRS[@]}"; do
         notify 5000 "Build Started: $BASENAME" "Running makepkg for $BASENAME..."
         (
             cd "$DIR" || exit 1
-        
+
+            # read current pkgrel and increment by 1
+            pkgrel=$(grep '^pkgrel=' PKGBUILD | cut -d= -f2)
+            sed -i "s/^pkgrel=${pkgrel}/pkgrel=$((pkgrel + 1))/" PKGBUILD
+
+
             if [[ -f "build.sh" ]]; then
                 echo "--> running build.sh in $DIR"
                 chmod +x build.sh
                 bash build.sh
             fi
-        
+
             makepkg -sCcf --sign
         )
         BUILD_EXIT=$?
@@ -177,7 +182,7 @@ for DIR in "${MATCHING_DIRS[@]}"; do
             rm -rfv $SCRIPT_DIR/__deployed__/x86_64/$BASENAME-*
           # move newly built files
             mv $SCRIPT_DIR/$BASENAME/*.pkg.* "$SCRIPT_DIR/__deployed__/x86_64/" -v
-          
+
             echo "  [OK] Build succeeded: $BASENAME"
             notify 5000 "Build Succeeded: $BASENAME" "$BASENAME compiled and signed successfully."
             (( BUILT++ ))

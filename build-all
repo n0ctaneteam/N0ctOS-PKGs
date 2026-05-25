@@ -88,7 +88,11 @@ for DIR in "${MATCHING_DIRS[@]}"; do
 
     (
         cd "$DIR" || exit 1
-    
+
+        # read current pkgrel and increment by 1
+        pkgrel=$(grep '^pkgrel=' PKGBUILD | cut -d= -f2)
+        sed -i "s/^pkgrel=${pkgrel}/pkgrel=$((pkgrel + 1))/" PKGBUILD
+        
         if [[ -f "build.sh" ]]; then
             echo "--> running build.sh in $DIR"
             chmod +x build.sh

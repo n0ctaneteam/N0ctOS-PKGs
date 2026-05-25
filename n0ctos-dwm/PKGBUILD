@@ -2,7 +2,7 @@
 pkgname=n0ctos-dwm
 _pkgname=dwm
 pkgver=6.5
-pkgrel=1
+pkgrel=4
 pkgdesc="Dynamic window manager - suckless, minimal, tiling"
 arch=('x86_64')
 url="https://dwm.suckless.org"

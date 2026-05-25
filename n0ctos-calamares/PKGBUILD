@@ -2,7 +2,7 @@
 
 pkgname=n0ctos-calamares
 pkgver=3.4.2
-pkgrel=4
+pkgrel=8
 pkgdesc='GUI installer For N0ctOS Linux Distro'
 arch=('x86_64')
 license=(GPL-3.0-or-later)
@@ -10,12 +10,25 @@ url="https://github.com/n0ctaneteam/N0ctOS-calamares"
 conflicts=('calamares')
 provides=('calamares')
 depends=(
-  'kcoreaddons'
-  'kpmcore'
-  'libpwquality'
-  'qt6-declarative'
-  'qt6-svg'
-  'yaml-cpp'
+	'boost-libs'
+	'cryptsetup'
+	'efibootmgr'
+	'gtk-update-icon-cache'
+	'icu'
+	'kconfig'
+	'kcoreaddons'
+	'kcrash'
+	'ki18n'
+	'kparts'
+	'kpmcore'
+	'kservice'
+	'kwidgetsaddons'
+	'libpwquality'
+	'polkit-qt6'
+	'qt6-declarative'
+	'solid'
+	'squashfs-tools'
+	'yaml-cpp'
 )
 makedepends=(
   'boost'
