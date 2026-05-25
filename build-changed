@@ -16,6 +16,7 @@ CHECK_FILES=(
     "*.cfg/*"
     "*.install"
     "*.patch"
+    "*"
 )
 
 # Notification helper
