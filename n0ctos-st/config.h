@@ -5,7 +5,7 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "JetBrainsMono Nerd Font Propo:pixelsize=14:antialias=true:autohint=true";
+static char *font = "ProFontWindows Nerd Font Propo:pixelsize=14:antialias=true:autohint=true";
 static int borderpx = 2;
 
 /*
@@ -121,10 +121,10 @@ static const char *colorname[] = {
 	"#cccccc",  /* 256 — default fg highlight        */
 	"#555555",  /* 257 — cursor color                 */
 	"#dce6ff",  /* 258 — default foreground — matches WHITE in welcome.sh */
-	"#0a071f",  /* 259 — default background — matches your dark bg        */
+	"#091042",  /* 259 — default background — matches your dark bg        */
 };
 
-float alpha = 0.72;
+float alpha = 0.65;
 /*
  * Default colors (colorname index)
  * foreground, background, cursor, reverse cursor
